@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizzatore PDF</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            height: 100vh; /* Garantisce che il corpo riempia tutto lo schermo */
+        }
+
+        #pdf-canvas {
+            border: 1px solid black;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="pdf-canvas"></canvas>
+    <script>
+        const url = 'your-document.pdf';  // Assicurati che il PDF sia nella stessa directory del server
+        const canvas = document.getElementById('pdf-canvas');
+        const context = canvas.getContext('2d');
+        let pdfDoc = null;
+        let pageNum = 1;
+
+        pdfjsLib.getDocument(url).promise.then(pdf => {
+            pdfDoc = pdf;
+            renderPage(pageNum);
+        });
+
+        function renderPage(num) {
+            pdfDoc.getPage(num).then(page => {
+                // Ottieni le dimensioni della viewport
+                const viewport = page.getViewport({ scale: 1 });
+                const scale = Math.min(window.innerWidth / viewport.width, window.innerHeight / viewport.height);
+                
+                // Ottieni un nuovo viewport scalato
+                const scaledViewport = page.getViewport({ scale: scale });
+                canvas.width = scaledViewport.width;
+                canvas.height = scaledViewport.height;
+
+                // Renderizza la pagina sul canvas
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: scaledViewport
+                };
+
+                page.render(renderContext);
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            const x = e.clientX;
+            const boundingRect = canvas.getBoundingClientRect();
+            const canvasMiddle = boundingRect.left + (canvas.width / 2);
+
+            // Controlla se il clic è a destra o a sinistra del centro del canvas
+            if (x > canvasMiddle) {
+                // Clic sulla destra - pagina successiva
+                if (pageNum < pdfDoc.numPages) {
+                    pageNum += 1;
+                } else {
+                    // Torna alla prima pagina se si raggiunge la fine
+                    pageNum = 1;
+                }
+            } else {
+                // Clic sulla sinistra - pagina precedente
+                if (pageNum > 1) {
+                    pageNum -= 1;
+                } else {
+                    // Torna all'ultima pagina se si raggiunge l'inizio
+                    pageNum = pdfDoc.numPages;
+                }
+            }
+            renderPage(pageNum);
+        });
+
+        // Rendarizza la pagina anche quando la finestra viene ridimensionata
+        window.addEventListener('resize', () => {
+            renderPage(pageNum);
+        });
+    </script>
+</body>
+
+</html>
