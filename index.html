@@ -9,19 +9,17 @@
     <style>
         body, html {
             margin: 0;
+            padding: 0;
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #f0f0f0;
             height: 100vh; /* Garantisce che il corpo riempia tutto lo schermo */
         }
 
         #pdf-canvas {
             border: 1px solid black;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            height: 100%;
         }
     </style>
 </head>
@@ -42,12 +40,13 @@
 
         function renderPage(num) {
             pdfDoc.getPage(num).then(page => {
-                // Ottieni le dimensioni della viewport
                 const viewport = page.getViewport({ scale: 1 });
-                const scale = Math.min(window.innerWidth / viewport.width, window.innerHeight / viewport.height);
                 
-                // Ottieni un nuovo viewport scalato
+                // Calcola la scala per riempire lo schermo senza distorsione
+                const scale = Math.min(window.innerWidth / viewport.width, window.innerHeight / viewport.height);
                 const scaledViewport = page.getViewport({ scale: scale });
+
+                // Imposta la larghezza e l'altezza del canvas secondo le nuove dimensioni
                 canvas.width = scaledViewport.width;
                 canvas.height = scaledViewport.height;
 
